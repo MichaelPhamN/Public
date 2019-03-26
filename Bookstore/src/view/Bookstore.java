@@ -12,7 +12,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.Paper;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -26,6 +32,7 @@ import model.Cart;
 import model.Item;
 import model.ItemOrder;
 import utility.FileLoader;
+import utility.Helper;
 
 /**
  * The Bookstore Panel.
@@ -64,16 +71,6 @@ public class Bookstore {
     private JTextField myOutputTotal;
     
     /**
-     * The printing button.
-     */
-    private JButton myPrintingButton;
-    
-    /**
-     * The clear button.
-     */
-    private JButton myClearButton;
-    
-    /**
      * The checkbox membership.
      */
     private JCheckBox myCheckBox;
@@ -84,10 +81,16 @@ public class Bookstore {
     private final Cart myCart; 
     
     /**
+     * The list items.
+     */
+    private final List<JTextField> myItemQuantities;
+    
+    /**
      * The bookstore panel constructor.
      */
     public Bookstore() { 
         myCart = new Cart();
+        myItemQuantities = new ArrayList<JTextField>();
     }
         
     /**
@@ -110,7 +113,7 @@ public class Bookstore {
         /**
          * Set size for text field and cannot edit.
          */
-        myOutputTotal = new JTextField("$0.00");
+        myOutputTotal = new JTextField(Helper.convertCurrency(BigDecimal.valueOf(0)));
         myOutputTotal.setPreferredSize(TEXTFIELD_SIZE);
         myOutputTotal.setEditable(false);
                         
@@ -146,6 +149,7 @@ public class Bookstore {
                     }
                 });
                 itemPanel.add(input);
+                myItemQuantities.add(input);
                 itemPanel.add(new JLabel(item.toString()));
                 panel.add(itemPanel);
             }
@@ -177,34 +181,78 @@ public class Bookstore {
             theQuantity.setText("");
         }
         myCart.add(new ItemOrder(theItem, number));
+        updateTotal();
     }
     
+    
+    /**
+     * update total cost.
+     */
+    private void updateTotal() {
+        myOutputTotal.setText(Helper.convertCurrency(myCart.calculateTotal()));        
+    }
+
     /**
      * Create Clear Panel.
      * @return a clear panel
      */
     private JPanel createBottomPanel() {
-        final JPanel buttonPanel = new JPanel(new BorderLayout());
-        
+        final JPanel buttonPanel = new JPanel(new BorderLayout());        
         
         final JPanel clearPanel = new JPanel();   
         clearPanel.setBackground(COLOR_2);
         clearPanel.setBorder(new EmptyBorder(0, PADDING, 0, PADDING));        
-        myClearButton = new JButton("Clear");        
+        final JButton clearButton = new JButton("Clear"); 
+        clearButton.addActionListener(new ActionListener() {            
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                for (final JTextField item : myItemQuantities) {
+                    item.setText("");
+                }
+                myOutputTotal.setText(Helper.convertCurrency(BigDecimal.valueOf(0)));
+                myCheckBox.setSelected(false);
+                myCart.clear();
+            }
+        });
         final JPanel customerPanel = new JPanel(new BorderLayout());
         customerPanel.setBackground(COLOR_2);
         myCheckBox = new JCheckBox();
+        myCheckBox.addActionListener(new ActionListener() {            
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                if (myCheckBox.isSelected()) {
+                    myCart.setMembership(true);
+                    updateTotal();
+                } else {
+                    myCart.setMembership(false);
+                    updateTotal();
+                }
+                
+                //OR
+                /*
+                 * myCart.setMembership(myCheckBox.isSelected());
+                 * updateTotal();
+                 */
+                
+            }
+        });
         final JLabel memebership = new JLabel("customer has store membership");
         memebership.setForeground(Color.WHITE);
         customerPanel.add(myCheckBox, BorderLayout.WEST);
         customerPanel.add(memebership, BorderLayout.CENTER);       
-        clearPanel.add(myClearButton);       
+        clearPanel.add(clearButton);       
         clearPanel.add(customerPanel);
         
         final JPanel printingPanel = new JPanel();   
         printingPanel.setBackground(COLOR_2);
-        myPrintingButton = new JButton("Printing Receipt");
-        printingPanel.add(myPrintingButton);
+        final JButton printingButton = new JButton("Printing Receipt");
+        printingButton.addActionListener(new ActionListener() {            
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                setupPrinterJob();                
+            }
+        });
+        printingPanel.add(printingButton);
         
         buttonPanel.add(clearPanel, BorderLayout.NORTH);
         buttonPanel.add(printingPanel, BorderLayout.SOUTH);
@@ -212,23 +260,45 @@ public class Bookstore {
     }
     
     /**
+     * set up printing.
+     */
+    private void setupPrinterJob() {
+        final PrinterJob printerJob = PrinterJob.getPrinterJob();
+        printerJob.setJobName("Bookstore Receipt");
+        printerJob.setCopies(1);
+        final PageFormat pageFormat = printerJob.defaultPage();
+        final Paper paper = new Paper();
+        final double defaultMargin = 36; // half inch
+        paper.setImageableArea(defaultMargin, defaultMargin, 
+                   paper.getWidth() - defaultMargin * 2, 
+                   paper.getHeight() - defaultMargin * 2);
+        
+        pageFormat.setPaper(paper);
+        printerJob.setPrintable(new MyPrintable(), pageFormat);
+        
+        if (printerJob.printDialog()) {
+            try {
+                printerJob.print();
+            } catch (final PrinterException e) {
+                System.out.println(e);
+            }
+        }
+    }
+    
+    /**
      * Create GUI.
      */
     public static void createAndShowGUI() {
-        myFrame = new JFrame("UW Bookstore");
-        
+        myFrame = new JFrame("UW Bookstore");        
         final Bookstore bookstore = new Bookstore();
-
         myFrame.add(bookstore.createTopPanel(), BorderLayout.NORTH);
         myFrame.add(bookstore.createCenterPanel(), BorderLayout.CENTER);
-        myFrame.add(bookstore.createBottomPanel(), BorderLayout.SOUTH);
-        
+        myFrame.add(bookstore.createBottomPanel(), BorderLayout.SOUTH);        
         myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         myFrame.setLocationRelativeTo(null);
         myFrame.setResizable(false);
         myFrame.pack();
-        myFrame.setVisible(true);
-        
+        myFrame.setVisible(true);        
     }
 
 }

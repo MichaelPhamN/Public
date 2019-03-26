@@ -3,8 +3,6 @@
  */
 package model;
 
-import static java.math.BigDecimal.ROUND_HALF_UP;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -14,7 +12,7 @@ import java.util.List;
  * @author phamngovinhphuc
  * @version 1
  */
-public class Cart implements Comparable<ItemOrder> {
+public class Cart {
     /**
      * A List Item Order.
      */
@@ -41,11 +39,18 @@ public class Cart implements Comparable<ItemOrder> {
     }
     
     /**
-     * set membership.
+     * set membership from bookstore frame.
      * @param theMembership the membership.
      */
     public void setMembership(final boolean theMembership) {
         myMembership = theMembership;
+    }
+    
+    /**
+     * @return get membership.
+     */
+    public boolean isMembership() {
+        return myMembership;
     }
     
     /**
@@ -60,20 +65,30 @@ public class Cart implements Comparable<ItemOrder> {
      * @return the total cost.
      */
     public BigDecimal calculateTotal() {
-        BigDecimal total = new BigDecimal(0);
-        total = total.setScale(2, RoundingMode.HALF_EVEN);
-        
-        
-        
+        BigDecimal total = new BigDecimal("0.00");
+        total = total.setScale(2, RoundingMode.HALF_EVEN);        
+        for (final ItemOrder items : myCart) {
+            if (items.getMyItem().isMyIsBulk()) {
+                if (this.isMembership()) {
+                    final int divQuantity = items.getMyQuantity() 
+                                    / items.getMyItem().getMyBulkQuantity();
+                    final int modQuantity = items.getMyQuantity() 
+                                    % items.getMyItem().getMyBulkQuantity();
+                    if (divQuantity > 0) {
+                        total = total.add(items.getMyItem().getMyBulkPrice().multiply(
+                                      BigDecimal.valueOf(divQuantity)));
+                    } 
+                    total = total.add(items.getMyItem().getMyItemPrice().multiply(
+                                      BigDecimal.valueOf(modQuantity)));
+                } else {
+                    total = total.add(items.getMyItem().getMyItemPrice().multiply(
+                                  BigDecimal.valueOf(items.getMyQuantity())));
+                }                                    
+            } else {
+                total = total.add(items.getMyItem().getMyItemPrice().multiply(
+                                  BigDecimal.valueOf(items.getMyQuantity())));
+            }                
+        }
         return total;
     }
-    
-
-    @Override
-    public int compareTo(ItemOrder o) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-    
-    
 }
