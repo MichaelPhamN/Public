@@ -24,10 +24,23 @@ public class Cart {
     private boolean myMembership;
     
     /**
+     * The total cost.
+     */
+    private BigDecimal myTotal;
+    
+    /**
      * Constructor that creates an empty shopping cart.
      */
     public Cart() {
         myCart = new ArrayList<ItemOrder>();
+        myTotal = new BigDecimal("0.00");
+    }
+    
+    /**
+     * @return get list items in cart.
+     */
+    public List<ItemOrder> getMyCart() {
+        return myCart;
     }
     
     /**
@@ -64,31 +77,44 @@ public class Cart {
      * Calculate the total.
      * @return the total cost.
      */
-    public BigDecimal calculateTotal() {
-        BigDecimal total = new BigDecimal("0.00");
-        total = total.setScale(2, RoundingMode.HALF_EVEN);        
+    public BigDecimal calculateTotal() {        
+        myTotal = myTotal.setScale(2, RoundingMode.HALF_EVEN);        
         for (final ItemOrder items : myCart) {
-            if (items.getMyItem().isMyIsBulk()) {
-                if (this.isMembership()) {
-                    final int divQuantity = items.getMyQuantity() 
-                                    / items.getMyItem().getMyBulkQuantity();
-                    final int modQuantity = items.getMyQuantity() 
-                                    % items.getMyItem().getMyBulkQuantity();
-                    if (divQuantity > 0) {
-                        total = total.add(items.getMyItem().getMyBulkPrice().multiply(
-                                      BigDecimal.valueOf(divQuantity)));
-                    } 
-                    total = total.add(items.getMyItem().getMyItemPrice().multiply(
-                                      BigDecimal.valueOf(modQuantity)));
-                } else {
-                    total = total.add(items.getMyItem().getMyItemPrice().multiply(
-                                  BigDecimal.valueOf(items.getMyQuantity())));
-                }                                    
+            if (this.isMembership() && items.getMyItem().isMyIsBulk()) {
+                final int divQuantity = items.getMyQuantity() 
+                                / items.getMyItem().getMyBulkQuantity();
+                final int modQuantity = items.getMyQuantity() 
+                                % items.getMyItem().getMyBulkQuantity();
+                if (divQuantity > 0) {
+                    myTotal = myTotal.add(items.getMyItem().getMyBulkPrice().multiply(
+                                  BigDecimal.valueOf(divQuantity)));
+                } 
+                myTotal = myTotal.add(items.getMyItem().getMyItemPrice().multiply(
+                                  BigDecimal.valueOf(modQuantity)));
             } else {
-                total = total.add(items.getMyItem().getMyItemPrice().multiply(
-                                  BigDecimal.valueOf(items.getMyQuantity())));
-            }                
+                myTotal = myTotal.add(items.getMyItem().getMyItemPrice().multiply(
+                              BigDecimal.valueOf(items.getMyQuantity())));
+            }                                    
         }
-        return total;
+        return myTotal;
+    }
+    
+    /**
+     * a string including all item name and its quantity in a cart. 
+     */
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder(128);
+        builder.append("Items in the cart: ");
+        if (this.getMyCart() == null) {
+            builder.append(" no item");
+        } else {
+            this.getMyCart().forEach(item -> {
+                builder.append(item.getMyItem().getMyItemName());
+                builder.append(", ");
+                builder.append(item.getMyQuantity());
+            });     
+        }
+        return builder.toString();
     }
 }

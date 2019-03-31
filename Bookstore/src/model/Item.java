@@ -16,7 +16,7 @@ public class Item implements Comparable<Item> {
     /**
      * The comma.
      */
-    private static final String COMMA = ",";
+    private static final String COMMA = ", ";
     /**
      * The Item Name.
      */

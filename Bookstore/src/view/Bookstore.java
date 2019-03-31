@@ -3,6 +3,7 @@
  */
 package view;
 
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -33,6 +34,7 @@ import model.Item;
 import model.ItemOrder;
 import utility.FileLoader;
 import utility.Helper;
+
 
 /**
  * The Bookstore Panel.
@@ -84,6 +86,11 @@ public class Bookstore {
      * The list items.
      */
     private final List<JTextField> myItemQuantities;
+    
+    /**
+     * The membership.
+     */
+    private boolean myMembership;
     
     /**
      * The bookstore panel constructor.
@@ -222,12 +229,12 @@ public class Bookstore {
             public void actionPerformed(final ActionEvent theEvent) {
                 if (myCheckBox.isSelected()) {
                     myCart.setMembership(true);
-                    updateTotal();
+                    myMembership = true;
                 } else {
                     myCart.setMembership(false);
-                    updateTotal();
+                    myMembership = false;
                 }
-                
+                updateTotal();
                 //OR
                 /*
                  * myCart.setMembership(myCheckBox.isSelected());
@@ -263,6 +270,7 @@ public class Bookstore {
      * set up printing.
      */
     private void setupPrinterJob() {
+        //Old Printing Style
         final PrinterJob printerJob = PrinterJob.getPrinterJob();
         printerJob.setJobName("Bookstore Receipt");
         printerJob.setCopies(1);
@@ -274,7 +282,7 @@ public class Bookstore {
                    paper.getHeight() - defaultMargin * 2);
         
         pageFormat.setPaper(paper);
-        printerJob.setPrintable(new MyPrintable(), pageFormat);
+        printerJob.setPrintable(new MyPrintable(myCart, myMembership), pageFormat);
         
         if (printerJob.printDialog()) {
             try {
