@@ -102,9 +102,6 @@ public final class MyPrintable implements Printable {
         
         final Graphics2D g2 = (Graphics2D) theGraphic;
         
-        /**
-         * Title.
-         */
         g2.setFont(new Font(FONT, Font.BOLD, FONT_TITLE_SIZE));
         g2.drawString("UW Bookstore Invoice", TITLE_X, TITLE_Y);
         
@@ -124,7 +121,7 @@ public final class MyPrintable implements Printable {
         BigDecimal total = BigDecimal.ZERO;
         total = total.setScale(2, RoundingMode.HALF_EVEN);
         for (final ItemOrder items : myCart.getMyCart()) {
-            g2.drawString(i + ".", COLUMN_1, y);
+            
             final StringBuilder builder = new StringBuilder(256);
             final NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.US);
             builder.append(items.getMyItem().getMyItemName());
@@ -137,8 +134,7 @@ public final class MyPrintable implements Printable {
                 builder.append(nf.format(items.getMyItem().getMyBulkPrice()));
                 builder.append(") ");
             } 
-            g2.drawString(builder.toString(), COLUMN_ITEM, y);
-            g2.drawString(Integer.toString(items.getMyQuantity()), COLUMN_3, y);
+            
             
             BigDecimal itemCost = BigDecimal.ZERO;
             
@@ -162,9 +158,15 @@ public final class MyPrintable implements Printable {
                 total = total.add(items.getMyItem().getMyItemPrice().multiply(
                               BigDecimal.valueOf(items.getMyQuantity())));
             }
-            g2.drawString(itemCost.toString(), COLUMN_TOTAL, y);
-            i = i + 1;
-            y = y + NEXT_LINE;
+            
+            if (itemCost.compareTo(BigDecimal.ZERO) == 1) {                
+                g2.drawString(i + ".", COLUMN_1, y);
+                g2.drawString(builder.toString(), COLUMN_ITEM, y);
+                g2.drawString(Integer.toString(items.getMyQuantity()), COLUMN_3, y);
+                g2.drawString(itemCost.toString(), COLUMN_TOTAL, y);
+                i = i + 1;
+                y = y + NEXT_LINE;
+            }        
         }
         g2.setFont(new Font(FONT, Font.BOLD, FONT_BODY_SIZE)); 
         g2.drawString("Total Cost: " + total.toString(), COLUMN_TOTAL_COST, y);
