@@ -9,6 +9,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -42,6 +43,12 @@ import utility.Helper;
  * @version 1
  */
 public class Bookstore {
+    /** A ToolKit. */
+    private static final Toolkit KIT = Toolkit.getDefaultToolkit();
+    
+    /** The Dimension of the screen. */
+    private static final Dimension SCREEN_SIZE = KIT.getScreenSize();
+    
     /** Padding. */
     private static final int PADDING = 20;
     
@@ -195,7 +202,7 @@ public class Bookstore {
     /**
      * update total cost.
      */
-    private void updateTotal() {
+    private void updateTotal() {        
         myOutputTotal.setText(Helper.convertCurrency(myCart.calculateTotal()));        
     }
 
@@ -303,9 +310,10 @@ public class Bookstore {
         myFrame.add(bookstore.createCenterPanel(), BorderLayout.CENTER);
         myFrame.add(bookstore.createBottomPanel(), BorderLayout.SOUTH);        
         myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        myFrame.setLocationRelativeTo(null);
         myFrame.setResizable(false);
         myFrame.pack();
+        myFrame.setLocation(SCREEN_SIZE.width / 2 - myFrame.getWidth() / 2,
+                    SCREEN_SIZE.height / 2 - myFrame.getHeight() / 2);
         myFrame.setVisible(true);        
     }
 

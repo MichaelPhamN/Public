@@ -22,18 +22,12 @@ public class Cart {
      * Membership.
      */
     private boolean myMembership;
-    
-    /**
-     * The total cost.
-     */
-    private BigDecimal myTotal;
-    
+            
     /**
      * Constructor that creates an empty shopping cart.
      */
     public Cart() {
-        myCart = new ArrayList<ItemOrder>();
-        myTotal = new BigDecimal("0.00");
+        myCart = new ArrayList<ItemOrder>();        
     }
     
     /**
@@ -77,8 +71,9 @@ public class Cart {
      * Calculate the total.
      * @return the total cost.
      */
-    public BigDecimal calculateTotal() {        
-        myTotal = myTotal.setScale(2, RoundingMode.HALF_EVEN);        
+    public BigDecimal calculateTotal() {
+        BigDecimal total = new BigDecimal("0.00");
+        total = total.setScale(2, RoundingMode.HALF_EVEN);        
         for (final ItemOrder items : myCart) {
             if (this.isMembership() && items.getMyItem().isMyIsBulk()) {
                 final int divQuantity = items.getMyQuantity() 
@@ -86,17 +81,17 @@ public class Cart {
                 final int modQuantity = items.getMyQuantity() 
                                 % items.getMyItem().getMyBulkQuantity();
                 if (divQuantity > 0) {
-                    myTotal = myTotal.add(items.getMyItem().getMyBulkPrice().multiply(
+                    total = total.add(items.getMyItem().getMyBulkPrice().multiply(
                                   BigDecimal.valueOf(divQuantity)));
                 } 
-                myTotal = myTotal.add(items.getMyItem().getMyItemPrice().multiply(
+                total = total.add(items.getMyItem().getMyItemPrice().multiply(
                                   BigDecimal.valueOf(modQuantity)));
             } else {
-                myTotal = myTotal.add(items.getMyItem().getMyItemPrice().multiply(
+                total = total.add(items.getMyItem().getMyItemPrice().multiply(
                               BigDecimal.valueOf(items.getMyQuantity())));
             }                                    
         }
-        return myTotal;
+        return total;
     }
     
     /**

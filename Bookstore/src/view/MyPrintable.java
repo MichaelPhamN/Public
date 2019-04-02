@@ -65,13 +65,13 @@ public final class MyPrintable implements Printable {
     private static final int COLUMN_TOTAL_COST = 455;
     
     /** The header. */
-    private static final int HEADER = 140;
+    private static final int HEADER = 110;
     
     /** The order. */
     private static final int ORDEREDDAY = 90;
     
     /** The start item. */
-    private static final int BEGINNING_ITEM = 160;
+    private static final int BEGINNING_ITEM = 130;
     
     /** The next line. */
     private static final int NEXT_LINE = 15;
@@ -94,28 +94,43 @@ public final class MyPrintable implements Printable {
 
     @Override
     public int print(final Graphics theGraphic, final PageFormat thePageFormat, 
-                     final int thePageIndex) throws PrinterException {
-        
-        if (thePageIndex != 0) {
-            return Printable.NO_SUCH_PAGE;  //NOPMD
+                     final int thePageIndex) throws PrinterException { 
+        final int page;
+        if (thePageIndex == 0) {
+            final Graphics2D g2 = (Graphics2D) theGraphic;
+            
+            g2.setFont(new Font(FONT, Font.BOLD, FONT_TITLE_SIZE));
+            g2.drawString("UW Bookstore Invoice", TITLE_X, TITLE_Y);
+            
+            final DateFormat dateFormat = new SimpleDateFormat(
+                                               "dd/MM/yyyy HH:mm:ss", Locale.US);
+            final Date date = new Date();
+            g2.setFont(new Font(FONT, Font.BOLD, FONT_BODY_SIZE));
+            g2.drawString("Order Placed: " + dateFormat.format(date), COLUMN_NO, ORDEREDDAY);
+            
+            g2.drawString("No.", COLUMN_NO, HEADER);
+            g2.drawString("Items Ordered" , COLUMN_ITEM, HEADER);
+            g2.drawString("Quantity", COLUMN_QUANTITY, HEADER);
+            g2.drawString("Price" , COLUMN_TOTAL, HEADER);
+            
+            printItems(g2);
+            
+            final Rectangle2D outline = new Rectangle2D.Double(
+                     thePageFormat.getImageableX(), thePageFormat.getImageableY(), 
+                     thePageFormat.getImageableWidth(), thePageFormat.getImageableHeight());
+            g2.draw(outline);
+            page = Printable.PAGE_EXISTS;            
+        } else {        
+            page = Printable.NO_SUCH_PAGE;
         }
-        
-        final Graphics2D g2 = (Graphics2D) theGraphic;
-        
-        g2.setFont(new Font(FONT, Font.BOLD, FONT_TITLE_SIZE));
-        g2.drawString("UW Bookstore Invoice", TITLE_X, TITLE_Y);
-        
-        final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
-        final Date date = new Date();
-        g2.setFont(new Font(FONT, Font.BOLD, FONT_BODY_SIZE));
-        g2.drawString("Order Placed: " + dateFormat.format(date), COLUMN_NO, ORDEREDDAY);
-        
-        g2.drawString("No.", COLUMN_NO, HEADER);
-        g2.drawString("Items Ordered" , COLUMN_ITEM, HEADER);
-        g2.drawString("Quantity", COLUMN_QUANTITY, HEADER);
-        g2.drawString("Price" , COLUMN_TOTAL, HEADER);
-        
-        g2.setFont(new Font(FONT, Font.PLAIN, FONT_BODY_SIZE)); 
+        return page;
+    }
+    
+    /**
+     * @param theGraphics the graphics
+     */
+    private void printItems(final Graphics2D theGraphics) {        
+        theGraphics.setFont(new Font(FONT, Font.PLAIN, FONT_BODY_SIZE)); 
         int y = BEGINNING_ITEM;
         int i = 1;
         BigDecimal total = BigDecimal.ZERO;
@@ -137,7 +152,6 @@ public final class MyPrintable implements Printable {
             
             
             BigDecimal itemCost = BigDecimal.ZERO;
-            
             if (this.myMembership && items.getMyItem().isMyIsBulk()) {
                 final int divQuantity = items.getMyQuantity() 
                                 / items.getMyItem().getMyBulkQuantity();
@@ -160,22 +174,16 @@ public final class MyPrintable implements Printable {
             }
             
             if (itemCost.compareTo(BigDecimal.ZERO) == 1) {                
-                g2.drawString(i + ".", COLUMN_1, y);
-                g2.drawString(builder.toString(), COLUMN_ITEM, y);
-                g2.drawString(Integer.toString(items.getMyQuantity()), COLUMN_3, y);
-                g2.drawString(itemCost.toString(), COLUMN_TOTAL, y);
+                theGraphics.drawString(i + ".", COLUMN_1, y);
+                theGraphics.drawString(builder.toString(), COLUMN_ITEM, y);
+                theGraphics.drawString(Integer.toString(items.getMyQuantity()), COLUMN_3, y);
+                theGraphics.drawString(itemCost.toString(), COLUMN_TOTAL, y);
                 i = i + 1;
                 y = y + NEXT_LINE;
             }        
         }
-        g2.setFont(new Font(FONT, Font.BOLD, FONT_BODY_SIZE)); 
-        g2.drawString("Total Cost: " + total.toString(), COLUMN_TOTAL_COST, y);
-        
-        final Rectangle2D outline = new Rectangle2D.Double(
-                 thePageFormat.getImageableX(), thePageFormat.getImageableY(), 
-                 thePageFormat.getImageableWidth(), thePageFormat.getImageableHeight());
-        g2.draw(outline);
-        return PAGE_EXISTS;
+        theGraphics.setFont(new Font(FONT, Font.BOLD, FONT_BODY_SIZE)); 
+        theGraphics.drawString("Total Cost: " + total.toString(), COLUMN_TOTAL_COST, y);
     }
 
 }

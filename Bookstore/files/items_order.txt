@@ -9,3 +9,4 @@ Ipad;349.95
 Surface Pro;399.00
 Chromebook;399.00
 Macbook Pro;1297.99
+Dell XPS;899.99
